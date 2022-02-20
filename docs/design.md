@@ -1,7 +1,7 @@
 # Design Doc
 
 
-The goal of this project is to basically build 'distributed Luig'. Building on the concepts of Luigi but allow for two main differences:
+The goal of this project is to basically build 'distributed Luigi'. Building on the concepts of Luigi but allow for two main differences:
 
 1. The Scheduler has more redundancy. Currently the state of the scheduler is stored in a pickle file written to disk. You can save task history to a DB, but it'd be great to have multiples.
 2. Workers are basically 'executors'. They get a task and some arguments and execute
@@ -9,7 +9,7 @@ The goal of this project is to basically build 'distributed Luig'. Building on t
 
 
 Other features:
-- A task has an optional 'rollback' functionality. That is if it fails it will attempt to rollback and retry.
+- A task has an optional 'rollback' functionality. That is, if it fails it will attempt to rollback and retry.
 - Tasks are basically wrappers around another computational engine. The business logic is minimal.
 - There is some kind of 'type checking' on inputs built in. Probably leverage things like Pandera etc.
 
@@ -30,6 +30,8 @@ Task are a 'unit of work'. That is they're intended to do one thing, most likely
 One difference from Luigi is that 'configuration' and 'parameters' are broken out into separate arguments:
 - Configuration: Is the application runtime config, is this running in prod or locally? Where should files be saved etc
 - Parameters: Are specific business logic parameters.
+
+
 
 ## Scheduler
 
