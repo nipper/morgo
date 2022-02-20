@@ -1,4 +1,6 @@
-from morgo import Task
+from typing import List, Optional
+
+from morgo.task import Task, TaskList, TaskType
 
 
 def test_task_set_parameters():
@@ -36,3 +38,25 @@ def test_task_with_mixed_inherited_parameters():
 
     assert task_instance.int_parameter == 1
     assert task_instance.string_parameter == "test"
+
+
+def test_simple_task_list():
+    class TaskC(Task):
+        int_parameter: int
+        pass
+
+    class TaskB(Task):
+        int_parameter: int
+        pass
+
+    class TaskA(Task):
+        @property
+        def requirements(self) -> Optional[List[TaskType]]:
+            return [TaskC(int_parameter=1), TaskB(int_parameter=2)]
+
+    task_a = TaskA()
+
+    tl = TaskList(task_a)
+
+    assert tl.tasks["TaskC_1"].stakeholders == {task_a}
+    assert tl.tasks["TaskB_2"].stakeholders == {task_a}

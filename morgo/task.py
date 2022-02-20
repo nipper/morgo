@@ -1,4 +1,4 @@
-from typing import List, Optional, TypeVar
+from typing import List, Optional, Set, TypeVar
 
 import pydantic
 
@@ -70,7 +70,7 @@ class Task(BaseTask):
 
         self._config = config
         self._completed = False
-        self._stakeholders = []
+        self._stakeholders = set()
         self._set_parameters(kwargs, self._get_annotations())
 
     @classmethod
@@ -83,6 +83,10 @@ class Task(BaseTask):
                 pass
 
         return annotations
+
+    def add_stakeholder(self, stakeholder_task: TaskType):
+
+        self._stakeholders.add(stakeholder_task)
 
     ################################
     # Properties From here on down #
@@ -112,18 +116,29 @@ class Task(BaseTask):
     @property
     def id(self) -> str:
         """Returns"""
-        return f"{self.__class__.__name__}_{'_'.join([getattr(self,p) for p in self._parameters])}"
+        return f"{self.__class__.__name__}_{'_'.join([str(getattr(self,p)) for p in self._parameters])}"
 
     @id.setter
     def id(self, _):
         raise FrozenPropertyException(f"{self.task_name}.id cannot be modified.")
 
     @property
+    def ready(self) -> bool:
+        if self.stakeholders:
+            return all(stakeholder.completed for stakeholder in self.stakeholders)
+        else:
+            return True
+
+    @ready.setter
+    def ready(self, _):
+        raise FrozenPropertyException(f"{self.task_name}.ready cannot be modified.")
+
+    @property
     def requirements(self) -> Optional[List[TaskType]]:
         return None
 
     @property
-    def stakeholders(self) -> Optional[List[TaskType]]:
+    def stakeholders(self) -> Optional[Set[TaskType]]:
         return self._stakeholders
 
     @property
@@ -133,3 +148,29 @@ class Task(BaseTask):
     @task_name.setter
     def task_name(self, _):
         raise FrozenPropertyException(f"{self.task_name}.task_name cannot be modified.")
+
+
+# TODO: Rename : This needs a better name then 'TaskList'
+class TaskList:
+    def __init__(self, initial_task: Task):
+
+        self.tasks = {}
+
+        self._build_task_list(initial_task)
+
+    def _build_task_list(self, task: Task):
+
+        self.tasks[task.id] = task
+
+        if task.requirements:
+            requirement_task: Task
+
+            for requirement_task in task.requirements:
+                if requirement_task.id in self.tasks.keys():
+                    requirement_task = self.tasks[requirement_task.id]
+
+                requirement_task.add_stakeholder(task)
+
+                self.tasks[requirement_task.id] = requirement_task
+
+                self._build_task_list(requirement_task)
